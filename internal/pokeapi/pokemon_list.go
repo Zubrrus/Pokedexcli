@@ -2,18 +2,19 @@ package pokeapi
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 )
 
-func (c *Client) ListPokemons(locationName string) (RespPokenons, error) {
+func (c *Client) ListPokemons(locationName string) (PokemonEncounters, error) {
 	url := baseURL + "/location-area/" + locationName
 
 	if val, ok := c.cache.Get(url); ok {
-		pokemonsResp := RespPokenons{}
+		pokemonsResp := PokemonEncounters{}
 		err := json.Unmarshal(val, &pokemonsResp)
 		if err != nil {
-			return RespPokenons{}, err
+			return PokemonEncounters{}, err
 		}
 
 		return pokemonsResp, nil
@@ -21,24 +22,24 @@ func (c *Client) ListPokemons(locationName string) (RespPokenons, error) {
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return RespPokenons{}, err
+		return PokemonEncounters{}, err
 	}
 
 	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return RespPokenons{}, err
+	if err != nil || resp.StatusCode > 299 {
+		return PokemonEncounters{}, errors.New("location not found")
 	}
 	defer resp.Body.Close()
 
 	dat, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return RespPokenons{}, err
+		return PokemonEncounters{}, err
 	}
 
-	pokemonsResp := RespPokenons{}
+	pokemonsResp := PokemonEncounters{}
 	err = json.Unmarshal(dat, &pokemonsResp)
 	if err != nil {
-		return RespPokenons{}, err
+		return PokemonEncounters{}, err
 	}
 
 	c.cache.Add(url, dat)
