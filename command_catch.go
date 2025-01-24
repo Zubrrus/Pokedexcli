@@ -13,7 +13,7 @@ func commandCatch(cfg *config, params ...string) error {
 
 	pokemonName := params[0]
 
-	pokemonResp, err := cfg.pokeapiClient.GetPokemon(pokemonName)
+	pokemon, err := cfg.pokeapiClient.GetPokemon(pokemonName)
 	if err != nil {
 		return err
 	}
@@ -22,11 +22,12 @@ func commandCatch(cfg *config, params ...string) error {
 
 	fmt.Printf("Throwing a Pokeball at %s...\n", pokemonName)
 
-	if diceRoll < pokemonResp.BaseExperience {
+	if diceRoll < pokemon.BaseExperience {
 		fmt.Printf("%s escaped!\n", pokemonName)
 		return nil
 	}
 	fmt.Printf("%s was caught!\n", pokemonName)
-	cfg.caughtPokemon[pokemonName] = pokemonResp
+	fmt.Println("You may now inspect it with the inspect command.")
+	cfg.caughtPokemon[pokemon.Name] = pokemon
 	return nil
 }
